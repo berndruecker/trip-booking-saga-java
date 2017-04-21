@@ -1,12 +1,24 @@
 package io.flowing.trip.saga.camunda;
 
+import java.io.File;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.model.bpmn.AssociationDirection;
 import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.builder.AbstractActivityBuilder;
 import org.camunda.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
+import org.camunda.bpm.model.bpmn.instance.Association;
+import org.camunda.bpm.model.bpmn.instance.BaseElement;
+import org.camunda.bpm.model.bpmn.instance.BoundaryEvent;
+import org.camunda.bpm.model.bpmn.instance.BpmnModelElementInstance;
+import org.camunda.bpm.model.bpmn.instance.ServiceTask;
+import org.camunda.bpm.model.bpmn.instance.SubProcess;
+import org.camunda.bpm.model.xml.ModelInstance;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,30 +33,78 @@ public class TripBookingSaga {
   public void defineSaga() {
     AbstractFlowNodeBuilder saga = Bpmn.createExecutableProcess("trip").startEvent();
   
-    addActivity(saga, "Reserve car", ReserveCarAdapter.class);
-    addCompensationActivity(saga, "Cancel car", CancelCarAdapter.class);
+    saga = addActivity(saga, "Reserve car", ReserveCarAdapter.class);
+    saga = addCompensationActivity(saga, "Cancel car", CancelCarAdapter.class);
     
-    addActivity(saga, "Book hotel", BookHotelAdapter.class);
-    addCompensationActivity(saga, "Cancel hotel", CancelHotelAdapter.class);
+    saga = addActivity(saga, "Book hotel", BookHotelAdapter.class);
+    saga = addCompensationActivity(saga, "Cancel hotel", CancelHotelAdapter.class);
 
-    addActivity(saga, "Book flight", BookFlightAdapter.class);
-    addCompensationActivity(saga, "Cancel flight", CancelFlightAdapter.class);
+    saga = addActivity(saga, "Book flight", BookFlightAdapter.class);
+    saga = addCompensationActivity(saga, "Cancel flight", CancelFlightAdapter.class);
+    
+    saga = addCompensationTriggerOnAnyError(saga);
 
+    BpmnModelInstance modelInstance = saga.endEvent().done();
     camunda.getRepositoryService().createDeployment() //
-     .addModelInstance("trip.bpmn", saga.endEvent().done()) //
+     .addModelInstance("trip.bpmn", modelInstance) //
      .deploy();
+    
+    File file = new File("result.bpmn");
+    Bpmn.writeModelToFile(file, modelInstance);
   }    
   
   
-  private void addActivity(AbstractFlowNodeBuilder saga, String name, Class adapterClass) {
-    // this is very handy and could also be done inline above directly
-    saga.serviceTask().name(name).camundaClass(adapterClass.getName());
+  private AbstractFlowNodeBuilder addCompensationTriggerOnAnyError(AbstractFlowNodeBuilder saga) {    
+    ModelInstance modelInstance = saga.getElement().getModelInstance();        
+    BpmnModelElementInstance parent = (BpmnModelElementInstance) saga.getElement().getParentElement(); // WHooha
+
+    SubProcess eventSubProcess = modelInstance.newInstance(SubProcess.class);
+    parent.addChildElement(eventSubProcess);
+
+    eventSubProcess.builder().triggerByEvent().embeddedSubProcess()
+      .startEvent().error()
+      .intermediateThrowEvent().compensateEventDefinition().compensateEventDefinitionDone()
+      .endEvent()
+      .subProcessDone();
+    
+    return saga;
   }
 
-  private void addCompensationActivity(AbstractFlowNodeBuilder saga, String string, Class class1) {
-    // but unfortunately this is currently pretty unhandy in the model API (to be improved!) so I extracted that to an own helper method    
-    // TODO 
 
+  private AbstractFlowNodeBuilder addActivity(AbstractFlowNodeBuilder saga, String name, Class adapterClass) {
+    // this is very handy and could also be done inline above directly
+    return saga.serviceTask().name(name).camundaClass(adapterClass.getName());
+  }
+
+  private AbstractFlowNodeBuilder addCompensationActivity(AbstractFlowNodeBuilder saga, String name, Class adapterClass) {
+    // but unfortunately this is currently pretty unhandy in the model API (to be improved!) so I extracted that to an own helper method    
+    String currentElementId = saga.getElement().getAttributeValue("id");    
+    String boundaryEventId = currentElementId + "-compensation-event";
+    String compensationTaskId = currentElementId + "-compensation";
+
+    ModelInstance modelInstance = saga.getElement().getModelInstance();
+    
+    saga = ((AbstractActivityBuilder)saga).boundaryEvent(boundaryEventId)
+      .compensateEventDefinition()
+      .compensateEventDefinitionDone()
+      .moveToActivity(currentElementId);
+    
+    BoundaryEvent boundaryEvent = modelInstance.getModelElementById(boundaryEventId);
+    BaseElement scope = (BaseElement) boundaryEvent.getParentElement();
+
+    ServiceTask compensationHandler = modelInstance.newInstance(ServiceTask.class);
+    compensationHandler.setId(compensationTaskId);
+    compensationHandler.setForCompensation(true);
+    compensationHandler.setCamundaClass(adapterClass.getName());
+    scope.addChildElement(compensationHandler);
+
+    Association association = modelInstance.newInstance(Association.class);
+    association.setAssociationDirection(AssociationDirection.One);
+    association.setSource(boundaryEvent);
+    association.setTarget(compensationHandler);
+    scope.addChildElement(association);
+    
+    return saga;
   }
   
   
