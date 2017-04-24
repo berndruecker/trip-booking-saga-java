@@ -26,8 +26,8 @@ public class TripBookingSaga {
         .compensationActivity("Cancel hotel", CancelHotelAdapter.class) //
         .activity("Book flight", BookFlightAdapter.class) //
         .compensationActivity("Cancel flight", CancelFlightAdapter.class) //
-        .triggerCompensationOnAnyError() //
-        .done();//
+        .end() //
+        .triggerCompensationOnAnyError();
 
     camunda.getRepositoryService().createDeployment() //
         .addModelInstance("trip.bpmn", saga.getModel()) //
