@@ -3,18 +3,19 @@ package io.flowing.trip.saga.camunda;
 import java.io.File;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.model.bpmn.Bpmn;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import io.flowing.trip.saga.camunda.builder.SagaBuilder;
+
 @Component
-@Singleton
+//@Singleton
 public class TripBookingSaga {
 
-  @Inject
+  @Autowired
   private ProcessEngine camunda;
 
   @PostConstruct

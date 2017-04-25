@@ -1,4 +1,6 @@
-package io.flowing.trip.saga.camunda;
+package io.flowing.trip.saga.camunda.builder;
+
+import static org.camunda.bpm.model.bpmn.builder.AbstractBaseElementBuilder.SPACE;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -27,28 +29,20 @@ import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import static org.camunda.bpm.model.bpmn.builder.AbstractBaseElementBuilder.SPACE;
-
 public class SagaBuilder {
 
   @SuppressWarnings("rawtypes")
   private AbstractFlowNodeBuilder saga;
   private BpmnModelInstance bpmnModelInstance;
+  private String name;
   
+  public SagaBuilder(String name) {
+    this.name = name;
+  }
+
   public static SagaBuilder newSaga(String name) {
-    SagaBuilder builder = new SagaBuilder();
+    SagaBuilder builder = new SagaBuilder(name);
     return builder.start();
-  }
-
-
-  public SagaBuilder start() {
-    saga = Bpmn.createExecutableProcess("trip").startEvent();
-    return this;
-  }
-  
-  public SagaBuilder end() {
-    saga = saga.endEvent();
-    return this;
   }
   
   public BpmnModelInstance getModel() {
@@ -58,34 +52,33 @@ public class SagaBuilder {
     return bpmnModelInstance;
   }
 
-  public SagaBuilder triggerCompensationOnAnyError() {    
-    ModelInstance modelInstance = saga.getElement().getModelInstance();        
-    BpmnModelElementInstance parent = (BpmnModelElementInstance) saga.getElement().getParentElement(); // WHooha
-
-    SubProcess eventSubProcess = modelInstance.newInstance(SubProcess.class);
-    parent.addChildElement(eventSubProcess);
-
-    saga.createDiagramInterchange(eventSubProcess);
-
-    eventSubProcess.builder().triggerByEvent().embeddedSubProcess()
-      .startEvent().error("java.lang.Throwable")
-      .intermediateThrowEvent().compensateEventDefinition().compensateEventDefinitionDone()
-      .endEvent()
-      .subProcessDone();    
-
+  public SagaBuilder start() {
+    saga = Bpmn.createExecutableProcess(name).startEvent("Start-" + name);
     return this;
   }
+  
+  public SagaBuilder end() {
+    saga = saga.endEvent("End-" + name);
+    return this;
+  }  
 
+  @SuppressWarnings("rawtypes")
   public SagaBuilder activity(String name, Class adapterClass) {
     // this is very handy and could also be done inline above directly
-    saga = saga.serviceTask().name(name).camundaClass(adapterClass.getName());
+    String id = "Activity-" + name.replace(" ", "-"); // risky thing ;-)
+    saga = saga.serviceTask(id).name(name).camundaClass(adapterClass.getName());
     return this;
   }
-
+  
+  @SuppressWarnings("rawtypes")
   public SagaBuilder compensationActivity(String name, Class adapterClass) {
-    // but unfortunately this is currently pretty unhandy in the model API (to be improved!) so I extracted that to an own helper method    
+    /*
+     * This is a bit unhandy with the Camunda Model API at the moment.
+     * It will be adresses with 
+     *  https://app.camunda.com/jira/browse/CAM-7682    
+     */
     String currentElementId = saga.getElement().getAttributeValue("id");    
-    String boundaryEventId = currentElementId + "-compensation-event";
+    String boundaryEventId = currentElementId + "-toBeCompensated";
     String compensationTaskId = currentElementId + "-compensation";
 
     ModelInstance modelInstance = saga.getElement().getModelInstance();
@@ -116,6 +109,8 @@ public class SagaBuilder {
     resizeSubProcess(shape);
     createBpmnEdge(association);
     
+    // cannot use this as not yet fixed in master - did a poc hack on a branch though:
+    // https://github.com/camunda/camunda-bpmn-model/commit/d38346380126113c1cf3cd3ae4cb737600ee03fa
 //    saga.createDiagramInterchange(compensationHandler);
 //    saga.createBpmnEdge(association); 
 
@@ -124,13 +119,44 @@ public class SagaBuilder {
     return this;
   }
   
+  public SagaBuilder triggerCompensationOnAnyError() {    
+    /*
+     * This is a bit unhandy with the Camunda Model API at the moment.
+     * It will be adresses with 
+     *  https://app.camunda.com/jira/browse/CAM-7683  
+     */
+    ModelInstance modelInstance = saga.getElement().getModelInstance();        
+    BpmnModelElementInstance parent = (BpmnModelElementInstance) saga.getElement().getParentElement(); // WHooha
+
+    SubProcess eventSubProcess = modelInstance.newInstance(SubProcess.class);
+    eventSubProcess.setId("TriggerCompensation");
+    parent.addChildElement(eventSubProcess);
+
+    saga.createDiagramInterchange(eventSubProcess);
+
+    eventSubProcess.builder().triggerByEvent().embeddedSubProcess()
+      .startEvent("ErrorCatched").error("java.lang.Throwable")
+      .intermediateThrowEvent("ToBeCompensated").compensateEventDefinition().compensateEventDefinitionDone()
+      .endEvent("ErrorHandled")
+      .subProcessDone();    
+
+    return this;
+  }
+
+  
   
   /**
-   * FROM HERE ON COPIED CODE FROM {@link AbstractBaseElementBuilder}
-   * and {@link AbstractBpmnModelElementBuilder} as they currently do not yet support
-   * Compensation & Associations and do not allow for easy extensibility
+   * CODE FROM HERE ON IS COPIED CODE FROM {@link AbstractBaseElementBuilder}
+   * AND {@link AbstractBpmnModelElementBuilder}.
    * 
-   * WAIT FOR CAM-??? to be resolved to ease implementation here.
+   * They currently do not yet support Compensation & Associations and do not 
+   * allow to define them externally. So copying it was the fastest way to get around.
+   * 
+   * Wait for these issues to be resolved - then implementation can be radically simplified.
+   * 
+   * https://app.camunda.com/jira/browse/CAM-7680
+   * https://app.camunda.com/jira/browse/CAM-7681
+   * 
    */
   private ModelInstance modelInstance() {
     return saga.getElement().getModelInstance();
