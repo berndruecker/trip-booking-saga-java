@@ -19,9 +19,9 @@ There are multiple options to implement a Saga. We want to add more alternative 
 
 ## Lightweight workflow engine (Camunda)
 
-Using the [Camunda](https://camunda.org/) engine you can implement the Saga above, either by using graphical modeling or by specifying the same thing via a Java DSL (called Model-API). The following code uses a small custom SagaBuilder to improve readability of the Saga definition:
+Using the [Camunda](https://camunda.org/) engine you can implement the Saga above, either by using graphical modeling or by a Java DSL (called Model-API). The following code uses a small custom SagaBuilder to improve readability of the Saga definition:
 
-```
+```java
 SagaBuilder saga = SagaBuilder.newSaga("trip")
         .activity("Reserve car", ReserveCarAdapter.class) 
         .compensationActivity("Cancel car", CancelCarAdapter.class) 
@@ -34,7 +34,7 @@ SagaBuilder saga = SagaBuilder.newSaga("trip")
 
 camunda.getRepositoryService().createDeployment() 
         .addModelInstance(saga.getModel()) 
-.deploy();
+        .deploy();
 ```
 
 The flow can also be expressed graphically using the BPMN notation (this is also auto-generated to be used in monitoring if using the DSL above):
