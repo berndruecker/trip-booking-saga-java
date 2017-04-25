@@ -17,6 +17,12 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<!-- Overwrite model API dependency as we rely on recent changes - to be removed soon -->
+				<groupId>org.camunda.bpm.model</groupId>
+				<artifactId>camunda-bpmn-model</artifactId>
+				<version>7.7.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
 				<!-- Import dependency management from camunda -->
 				<groupId>org.camunda.bpm</groupId>
 				<artifactId>camunda-bom</artifactId>
@@ -38,17 +44,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!--
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-cloud-connectors</artifactId>
-			</dependency>
-			-->		
+			<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-starter-cloud-connectors</artifactId> 
+				</dependency> -->
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
-		
+
 		<dependency>
 			<groupId>org.camunda.bpm.extension.springboot</groupId>
 			<artifactId>camunda-bpm-spring-boot-starter</artifactId>

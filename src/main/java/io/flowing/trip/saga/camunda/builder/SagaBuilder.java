@@ -2,6 +2,7 @@ package io.flowing.trip.saga.camunda.builder;
 
 import static org.camunda.bpm.model.bpmn.builder.AbstractBaseElementBuilder.SPACE;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -77,11 +78,11 @@ public class SagaBuilder {
      * It will be adresses with 
      *  https://app.camunda.com/jira/browse/CAM-7682    
      */
-    String currentElementId = saga.getElement().getAttributeValue("id");    
+    String currentElementId = getElement().getAttributeValue("id");    
     String boundaryEventId = currentElementId + "-toBeCompensated";
     String compensationTaskId = currentElementId + "-compensation";
 
-    ModelInstance modelInstance = saga.getElement().getModelInstance();
+    ModelInstance modelInstance = getElement().getModelInstance();
     
     saga = ((AbstractActivityBuilder)saga).boundaryEvent(boundaryEventId)
       .compensateEventDefinition()
@@ -125,14 +126,16 @@ public class SagaBuilder {
      * It will be adresses with 
      *  https://app.camunda.com/jira/browse/CAM-7683  
      */
-    ModelInstance modelInstance = saga.getElement().getModelInstance();        
-    BpmnModelElementInstance parent = (BpmnModelElementInstance) saga.getElement().getParentElement(); // WHooha
+    ModelInstance modelInstance = getElement().getModelInstance();        
+    BpmnModelElementInstance parent = (BpmnModelElementInstance) getElement().getParentElement(); // WHooha
 
     SubProcess eventSubProcess = modelInstance.newInstance(SubProcess.class);
     eventSubProcess.setId("TriggerCompensation");
     parent.addChildElement(eventSubProcess);
 
-    saga.createDiagramInterchange(eventSubProcess);
+    BpmnShape shape = saga.createBpmnShape(eventSubProcess);
+    setCoordinates(shape);
+    resizeSubProcess(shape);
 
     eventSubProcess.builder().triggerByEvent().embeddedSubProcess()
       .startEvent("ErrorCatched").error("java.lang.Throwable")
@@ -142,8 +145,6 @@ public class SagaBuilder {
 
     return this;
   }
-
-  
   
   /**
    * CODE FROM HERE ON IS COPIED CODE FROM {@link AbstractBaseElementBuilder}
@@ -158,12 +159,26 @@ public class SagaBuilder {
    * https://app.camunda.com/jira/browse/CAM-7681
    * 
    */
+  
+  private ModelElementInstance getElement() {
+    // This will be possible in 7.7 - but it is not yet
+    // return saga.getElement();
+    try {
+      Method method = saga.getClass().getMethod("getElement");
+      method.setAccessible(true);
+      ModelElementInstance result = (ModelElementInstance) method.invoke(saga);
+      return result;
+    } catch (Exception ex) {
+      throw new RuntimeException("Could not access element of Fluent Builder: " + ex.getMessage(), ex);
+    }
+  }
+  
   private ModelInstance modelInstance() {
-    return saga.getElement().getModelInstance();
+    return getElement().getModelInstance();
   }
 
   private BaseElement element() {
-    return (BaseElement) saga.getElement();
+    return (BaseElement) getElement();
   }
 
   protected BpmnPlane findBpmnPlane() {
