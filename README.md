@@ -8,10 +8,6 @@ The Saga pattern describes how to solve distributed (business) transactions with
 
 In the example hotel, car and flight booking might be done by different remote services. So there is not technical transaction, but a business transaction. When the flight booking cannot be carried out succesfully you need to cancel hotel and car. 
 
-This can be expressed graphically using the BPMN notation:
-
-![Microservices](docs/example-bpmn.png)
-
 A more detailed look on Sagas is available online:
 
 * [Saga: How to implement complex business transactions without two phase commit](
@@ -25,7 +21,26 @@ There are multiple options to implement a Saga. We want to add more alternative 
 
 Using the [Camunda](https://camunda.org/) engine you can implement the Saga above, either by using graphical modeling or by specifying the same thing via a Java DSL (called Model-API). The following code uses a small custom SagaBuilder to improve readability of the Saga definition:
 
-<script src="https://gist.github.com/berndruecker/dd67e159e53ea4e5536bdb199b57930d.js"></script>
+```
+SagaBuilder saga = SagaBuilder.newSaga("trip")
+        .activity("Reserve car", ReserveCarAdapter.class) 
+        .compensationActivity("Cancel car", CancelCarAdapter.class) 
+        .activity("Book hotel", BookHotelAdapter.class) 
+        .compensationActivity("Cancel hotel", CancelHotelAdapter.class) 
+        .activity("Book flight", BookFlightAdapter.class) 
+        .compensationActivity("Cancel flight", CancelFlightAdapter.class) 
+        .end()
+        .triggerCompensationOnAnyError();
+
+camunda.getRepositoryService().createDeployment() 
+        .addModelInstance(saga.getModel()) 
+.deploy();
+```
+
+The flow can also be expressed graphically using the BPMN notation (this is also auto-generated to be used in monitoring if using the DSL above):
+
+![Compensation in BPMN](docs/example-bpmn.png)
+
 
 # Get started
 
@@ -37,7 +52,7 @@ You need
 Required steps
 
 * Checkout or download this project
-* Run the [Application.java]() class as this is a Spring Boot application running everything at once, starting exactly one Saga that is always "crashing" in the flight booking
+* Run the [Application.java](src/main/java/io/flowing/trip/Application.java) class as this is a Spring Boot application running everything at once, starting exactly one Saga that is always "crashing" in the flight booking
 * If you like you can access the Camunda database from the outside, e.g. using the ["Camunda Standalone Webapp"](https://camunda.org/download/) to inspect state. Use the follwing connection url: ```jdbc:h2:tcp://localhost:8092/mem:camunda;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE```. Note that you need [Camunda Enterprise](https://camunda.com/trial/) to see historical data.
 
 
