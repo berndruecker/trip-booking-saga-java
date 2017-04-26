@@ -38,7 +38,7 @@ camunda.getRepositoryService().createDeployment()
 ```
 A visual representation is automatically created in the background by Camunda. 
 
-**Important Note: The Auto-Layout will be introduced in Camunda 7.7 - so you have to use a current SNAPSHOT to see it in action - as it is done n this example.**
+**Important Note: The auto layout used here will be introduced in Camunda 7.7, released on 31st of May 2017. Beforehand you you have to use a current SNAPSHOT to see it in action. A snapshot is used in this example.**
 
 The flow can also be expressed graphically using the BPMN notation (this is also auto-generated to be used in monitoring if using the DSL above):
 
