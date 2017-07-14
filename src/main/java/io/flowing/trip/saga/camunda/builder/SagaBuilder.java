@@ -1,38 +1,10 @@
 package io.flowing.trip.saga.camunda.builder;
 
-import static org.camunda.bpm.model.bpmn.builder.AbstractBaseElementBuilder.SPACE;
-
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.camunda.bpm.model.bpmn.AssociationDirection;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.builder.AbstractActivityBuilder;
-import org.camunda.bpm.model.bpmn.builder.AbstractBaseElementBuilder;
-import org.camunda.bpm.model.bpmn.builder.AbstractBpmnModelElementBuilder;
 import org.camunda.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
 import org.camunda.bpm.model.bpmn.builder.ProcessBuilder;
-import org.camunda.bpm.model.bpmn.builder.ServiceTaskBuilder;
-import org.camunda.bpm.model.bpmn.instance.Activity;
-import org.camunda.bpm.model.bpmn.instance.Association;
-import org.camunda.bpm.model.bpmn.instance.BaseElement;
-import org.camunda.bpm.model.bpmn.instance.BoundaryEvent;
-import org.camunda.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import org.camunda.bpm.model.bpmn.instance.FlowNode;
-import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
-import org.camunda.bpm.model.bpmn.instance.ServiceTask;
-import org.camunda.bpm.model.bpmn.instance.SubProcess;
-import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnEdge;
-import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
-import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
-import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
-import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
-import org.camunda.bpm.model.xml.ModelInstance;
-import org.camunda.bpm.model.xml.instance.ModelElementInstance;
-
-import com.jayway.jsonpath.internal.function.numeric.Average;
 
 public class SagaBuilder {
 
