@@ -9,19 +9,13 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<java.version>1.8</java.version>
-		<camunda.version>7.7.0</camunda.version>
+		<camunda.version>7.8.0-alpha1</camunda.version>
 		<camunda.springbootstarter.version>2.0.0</camunda.springbootstarter.version>
 		<springboot.version>1.4.2.RELEASE</springboot.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<!-- Overwrite model API dependency as we rely on recent changes - to be removed soon -->
-				<groupId>org.camunda.bpm.model</groupId>
-				<artifactId>camunda-bpmn-model</artifactId>
-				<version>7.7.0-SNAPSHOT</version>
-			</dependency>
 			<dependency>
 				<!-- Import dependency management from camunda -->
 				<groupId>org.camunda.bpm</groupId>

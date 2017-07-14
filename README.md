@@ -38,7 +38,7 @@ camunda.getRepositoryService().createDeployment()
 ```
 A visual representation is automatically created in the background by Camunda. 
 
-**Important Note: The auto layout used here will be introduced in Camunda 7.7, released on 31st of May 2017. Beforehand you you have to use a current SNAPSHOT as we did in this example.**
+**Important Note: You need to use Camunda in a version >= 7.8.0-alpha1.**
 
 ![Cockpit Screenshot](docs/screenshot.png)
 
