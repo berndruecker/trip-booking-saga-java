@@ -1,4 +1,4 @@
-package io.flowing.trip;
+package io.flowing.trip.saga.camunda.springboot;
 
 
 import org.camunda.bpm.BpmPlatform;

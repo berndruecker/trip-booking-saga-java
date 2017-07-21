@@ -1,25 +1,63 @@
-# Saga example
+# Saga example: trip booking
 
-Example implementations of the Saga pattern for a classic example: trip booking.
+Example implementation of the Saga pattern for the classic trip booking example using a lightweight open source workflow engine (Camunda).
 
 ![Saga example](docs/example-use-case.png)
 
 The Saga pattern describes how to solve distributed (business) transactions without two-phase-commit as this does not scale in distributed systems. The basic idea is to break the overall transaction into multiple steps or activities. Only the steps internally can be performed in atomic transactions but the overall consistency is taken care of by the Saga. The Saga has the responsibility to either get the overall business transaction completed or to leave the system in a known termination state. So in case of errors a business rollback procedure is applied which occurs by calling compensation steps or activities in reverse order.
 
-In the example hotel, car and flight booking might be done by different remote services. So there is not technical transaction, but a business transaction. When the flight booking cannot be carried out succesfully you need to cancel hotel and car. 
-
-A more detailed look on Sagas is available online:
-
-* [Saga: How to implement complex business transactions without two phase commit](
+A more detailed look on Sagas is available in [Saga: How to implement complex business transactions without two phase commit](
 https://blog.bernd-ruecker.com/saga-how-to-implement-complex-business-transactions-without-two-phase-commit-e00aa41a1b1b)
 
-# Implementation options
+In the example hotel, car and flight booking might be done by different remote services. So there is not technical transaction, but a business transaction. When the flight booking cannot be carried out succesfully you need to cancel hotel and car. 
 
-There are multiple options to implement a Saga. We want to add more alternative approaches here in future. So far there is only one approach implemented.
+Using [Camunda](https://camunda.org/) you can implement the Saga either by using graphical modeling or by a Java DSL, called Model-API. As Camunda is very lightweight you can start the so called process engine, define the Saga and run instances by a couple of lines of Java code (if you use the default configuration and an in-memory H2 database):
 
-## Lightweight workflow engine (Camunda)
+```java
+public class TripBookingSaga {
 
-Using the [Camunda](https://camunda.org/) engine you can implement the Saga above, either by using graphical modeling or by a Java DSL (called Model-API). The following code uses a small custom SagaBuilder to improve readability of the Saga definition:
+  public static void main(String[] args) {
+    // Configure and startup (in memory) engine
+    ProcessEngine camunda = 
+        new StandaloneInMemProcessEngineConfiguration()
+          .buildProcessEngine();
+    
+    // define saga as BPMN process
+    ProcessBuilder saga = Bpmn.createExecutableProcess("trip");
+    
+    // - flow of activities and compensating actions
+    saga.startEvent()
+        .serviceTask("car").name("Reserve car").camundaClass(ReserveCarAdapter.class)
+          .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
+          .compensationStart().serviceTask("car-compensate").name("Cancel car").camundaClass(CancelCarAdapter.class).compensationDone()
+        .serviceTask("hotel").name("Book hotel").camundaClass(BookHotelAdapter.class)
+          .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
+          .compensationStart().serviceTask("hotel-compensate").name("Hotel car").camundaClass(CancelCarAdapter.class).compensationDone()
+        .serviceTask("flight").name("Book flight").camundaClass(BookFlightAdapter.class)
+          .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
+          .compensationStart().serviceTask("flight-compensate").name("Cancel flight").camundaClass(CancelCarAdapter.class).compensationDone()
+        .endEvent();
+    
+    // - trigger compensation in case of any exception (other triggers are possible)
+    saga.eventSubProcess()
+        .startEvent().error("java.lang.Throwable")
+        .intermediateThrowEvent().compensateEventDefinition().compensateEventDefinitionDone()
+        .endEvent();     
+
+    // finish Saga and deploy it to Camunda
+    camunda.getRepositoryService().createDeployment() //
+        .addModelInstance("trip.bpmn", saga.done()) //
+        .deploy();
+    
+    // now we can start running instances of our saga - its state will be persisted
+    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip1"));
+    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip2"));
+  }
+
+}
+```
+
+You might also write a thin [SagaBuilder](src/main/java/io/flowing/trip/saga/camunda/springboot/builder/SagaBuilder.java) to even improve readability of the Saga definition:
 
 ```java
 SagaBuilder saga = SagaBuilder.newSaga("trip")
@@ -36,13 +74,16 @@ camunda.getRepositoryService().createDeployment()
         .addModelInstance(saga.getModel()) 
         .deploy();
 ```
+
+In real-life scenarios you might configure and run the Camunda engine differently, e.g. by using Spring or Spring Boot. In this example you can also use the [Spring Boot Application](src/main/java/io/flowing/trip/saga/camunda/springboot/Application.java) in order to fire the application up - and afterwords even connect Camundas visual tooling.
+
 A visual representation is automatically created in the background by Camunda. 
 
 **Important Note: You need to use Camunda in a version >= 7.8.0-alpha1.**
 
 ![Cockpit Screenshot](docs/screenshot.png)
 
-The flow can also be modeled graphically using the BPMN notation:
+The flow can also be modeled graphically (instead of using the Model API) using the BPMN notation:
 
 ![Compensation in BPMN](docs/example-bpmn.png)
 
@@ -57,7 +98,9 @@ You need
 Required steps
 
 * Checkout or download this project
-* Run the [Application.java](src/main/java/io/flowing/trip/Application.java) class as this is a Spring Boot application running everything at once, starting exactly one Saga that is always "crashing" in the flight booking
+* Run the [Application.java](src/main/java/io/flowing/trip/saga/camunda/springboot/Application.java) class as this is a Spring Boot application running everything at once, starting exactly one Saga that is always "crashing" in the flight booking
 * If you like you can access the Camunda database from the outside, e.g. using the ["Camunda Standalone Webapp"](https://camunda.org/download/) to inspect state. Use the follwing connection url: ```jdbc:h2:tcp://localhost:8092/mem:camunda;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE```. Note that you need [Camunda Enterprise](https://camunda.com/trial/) to see historical data.
 
+As an alternative:
+* Run the [TripBookingSaga.java](src/main/java/io/flowing/trip/saga/camunda/simple/TripBookingSaga.java) class via your favorite IDE - it also will run instances of the Saga without requiring any infrastructure
 

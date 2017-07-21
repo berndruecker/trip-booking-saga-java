@@ -1,4 +1,4 @@
-package io.flowing.trip.saga.camunda;
+package io.flowing.trip.saga.camunda.adapter;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;

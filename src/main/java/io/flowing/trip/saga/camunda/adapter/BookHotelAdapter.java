@@ -1,14 +1,14 @@
-package io.flowing.trip.saga.camunda;
+package io.flowing.trip.saga.camunda.adapter;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 
-public class CancelHotelAdapter implements JavaDelegate {
+public class BookHotelAdapter implements JavaDelegate {
 
   @Override
   public void execute(DelegateExecution execution) throws Exception {
 
-    System.out.println("cancel hotel");
+    System.out.println("book hotel car");
 
   }
 

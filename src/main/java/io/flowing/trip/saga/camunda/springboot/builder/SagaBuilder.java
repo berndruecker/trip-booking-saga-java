@@ -1,4 +1,4 @@
-package io.flowing.trip.saga.camunda.builder;
+package io.flowing.trip.saga.camunda.springboot.builder;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
