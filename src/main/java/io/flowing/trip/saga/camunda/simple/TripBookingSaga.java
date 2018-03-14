@@ -9,6 +9,8 @@ import org.camunda.bpm.model.bpmn.builder.ProcessBuilder;
 import io.flowing.trip.saga.camunda.adapter.BookFlightAdapter;
 import io.flowing.trip.saga.camunda.adapter.BookHotelAdapter;
 import io.flowing.trip.saga.camunda.adapter.CancelCarAdapter;
+import io.flowing.trip.saga.camunda.adapter.CancelFlightAdapter;
+import io.flowing.trip.saga.camunda.adapter.CancelHotelAdapter;
 import io.flowing.trip.saga.camunda.adapter.ReserveCarAdapter;
 
 /**
@@ -31,13 +33,13 @@ public class TripBookingSaga {
     saga.startEvent()
         .serviceTask("car").name("Reserve car").camundaClass(ReserveCarAdapter.class)
           .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
-          .compensationStart().serviceTask("car-compensate").name("Cancel car").camundaClass(CancelCarAdapter.class).compensationDone()
+          .compensationStart().serviceTask("CancelCar").camundaClass(CancelCarAdapter.class).compensationDone()
         .serviceTask("hotel").name("Book hotel").camundaClass(BookHotelAdapter.class)
           .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
-          .compensationStart().serviceTask("hotel-compensate").name("Hotel car").camundaClass(CancelCarAdapter.class).compensationDone()
+          .compensationStart().serviceTask("CancelHotel").camundaClass(CancelHotelAdapter.class).compensationDone()
         .serviceTask("flight").name("Book flight").camundaClass(BookFlightAdapter.class)
           .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
-          .compensationStart().serviceTask("flight-compensate").name("Cancel flight").camundaClass(CancelCarAdapter.class).compensationDone()
+          .compensationStart().serviceTask("CancelFlight").camundaClass(CancelFlightAdapter.class).compensationDone()
         .endEvent();
     
     // - trigger compensation in case of any exception (other triggers are possible)
