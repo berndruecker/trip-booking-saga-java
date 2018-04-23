@@ -77,13 +77,15 @@ The engine will take care of state handling, compensation and could also handle 
 
 In real-life scenarios you might configure and run the Camunda engine differently, e.g. by using Spring or Spring Boot. In this example you can also use the [Spring Boot Application](src/main/java/io/flowing/trip/saga/camunda/springboot/Application.java) in order to fire the application up - and afterwords even connect Camundas visual tooling.
 
-A visual representation is automatically created in the background by Camunda. (**You need to use Camunda in a version >= 7.8.0-alpha1.**)
+A visual representation is automatically created in the background by Camunda. (**You need to use Camunda in a version >= 7.8.0.**)
 
 ![Cockpit Screenshot](docs/screenshot.png)
 
 The flow can also be modeled graphically instead of using the Model API. In this case use the [Camunda Modeler](https://camunda.org/download/modeler/) to draw the BPMN notation:
 
 ![Compensation in BPMN](docs/example-bpmn.png)
+
+The [trip.bpmn (BPMN model file)](docs/trip.bpmn)
 
 
 # Get started
