@@ -11,9 +11,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import com.camunda.consulting.util.LicenseHelper;
-import com.camunda.consulting.util.UserGenerator;
-
 @SpringBootApplication
 @EnableAutoConfiguration
 @EnableProcessApplication
@@ -30,10 +27,6 @@ public class Application {
     engine.getRuntimeService().startProcessInstanceByKey(
         "trip", 
         Variables.putValue("someVariableToPass", "someValue"));
-    
-    // and add default users to Camunda to be ready-to-go
-    UserGenerator.createDefaultUsers(engine);
-    LicenseHelper.setLicense(engine);    
     
     // Start H2 server to be able to connect to database from the outside
     Server.createTcpServer(new String[] { "-tcpPort", "8092", "-tcpAllowOthers" }).start();
