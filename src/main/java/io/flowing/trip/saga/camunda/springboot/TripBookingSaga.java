@@ -1,5 +1,7 @@
 package io.flowing.trip.saga.camunda.springboot;
 
+import java.util.HashMap;
+
 import javax.annotation.PostConstruct;
 
 import org.camunda.bpm.engine.ProcessEngine;
@@ -39,6 +41,12 @@ public class TripBookingSaga {
 
 //    File file = new File("result.bpmn");
 //    Bpmn.writeModelToFile(file, saga.getModel());
+  }
+  
+  public void bookTrip() {
+    HashMap<String, Object> someVariables = new HashMap<>();
+    // Could add some variables here - not used in simple demo
+    camunda.getRuntimeService().startProcessInstanceByKey("trip", someVariables);
   }
 
 }
