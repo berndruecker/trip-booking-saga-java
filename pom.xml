@@ -11,12 +11,12 @@
 		<java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<spring.boot.version>2.1.0.RELEASE</spring.boot.version>		
-		<camunda.version>7.11.0</camunda.version>
+		<spring.boot.version>2.2.0.RELEASE</spring.boot.version>		
+		<camunda.version>7.13.0</camunda.version>
 		<!-- Adjust if you want to use Enterprise Edition of Camunda:
 		<camunda.version>7.11.0-ee</camunda.version>
 		Make sure you also switch to the ee webapp dependency further below -->
-		<camunda.spring.boot.version>3.3.1</camunda.spring.boot.version>		
+		<camunda.spring.boot.version>7.13.0</camunda.spring.boot.version>		
 	</properties>
 
 	<dependencyManagement>
@@ -50,15 +50,31 @@
 	        -->
 			<version>${camunda.spring.boot.version}</version>			
 		</dependency>
+		<!-- 
 		<dependency>
 			<groupId>org.camunda.bpm.springboot</groupId>
 			<artifactId>camunda-bpm-spring-boot-starter-rest</artifactId>
 			<version>${camunda.spring.boot.version}</version>			
-		</dependency>		
+		</dependency>
+		 -->		
 	    <dependency>
 	        <groupId>org.springframework.boot</groupId>
 	        <artifactId>spring-boot-starter-jdbc</artifactId>
 	    </dependency>
+	    
+		<!-- API, java.xml.bind module -->
+		<dependency>
+		    <groupId>jakarta.xml.bind</groupId>
+		    <artifactId>jakarta.xml.bind-api</artifactId>
+		    <version>2.3.2</version>
+		</dependency>
+		
+		<!-- Runtime, com.sun.xml.bind module -->
+		<dependency>
+		    <groupId>org.glassfish.jaxb</groupId>
+		    <artifactId>jaxb-runtime</artifactId>
+		    <version>2.3.2</version>
+		</dependency>	    
 
 		<!-- testing -->
 		<dependency>
@@ -66,6 +82,7 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- 
 		<dependency>
 			<groupId>org.camunda.bpm.extension</groupId>
 			<artifactId>camunda-bpm-assert</artifactId>
@@ -85,7 +102,13 @@
 			<version>0.3.0</version>
 			<scope>test</scope>
 		</dependency>
-
+ 		-->
+		<dependency>
+		    <groupId>org.camunda.bpm.assert</groupId>
+		    <artifactId>camunda-bpm-assert</artifactId>
+		    <version>6.0.0</version>
+		    <scope>test</scope>
+		</dependency> 		
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>

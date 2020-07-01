@@ -29,6 +29,19 @@ public class TripBookingSaga {
         new StandaloneInMemProcessEngineConfiguration()
           .buildProcessEngine();
     
+    BpmnModelInstance saga = createSaga();
+
+    // finish Saga and deploy it to Camunda
+    camunda.getRepositoryService().createDeployment() //
+        .addModelInstance("trip.bpmn", saga) //
+        .deploy();
+    
+    // now we can start running instances of our saga - its state will be persisted
+    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip1"));
+    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip2"));
+  }
+
+  public static BpmnModelInstance createSaga() {
     // define saga as BPMN process
     ProcessBuilder flow = Bpmn.createExecutableProcess("trip");
     
@@ -55,15 +68,7 @@ public class TripBookingSaga {
     BpmnModelInstance saga = flow.done();
     // optional: Write to file to be able to open it in Camunda Modeler
     //Bpmn.writeModelToFile(new File("trip.bpmn"), saga);
-
-    // finish Saga and deploy it to Camunda
-    camunda.getRepositoryService().createDeployment() //
-        .addModelInstance("trip.bpmn", saga) //
-        .deploy();
-    
-    // now we can start running instances of our saga - its state will be persisted
-    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip1"));
-    camunda.getRuntimeService().startProcessInstanceByKey("trip", Variables.putValue("name", "trip2"));
+    return saga;
   }
 
 }
