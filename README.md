@@ -28,7 +28,7 @@ public class TripBookingSaga {
           .compensationStart().serviceTask("car-compensate").name("Cancel car").camundaClass(CancelCarAdapter.class).compensationDone()
         .serviceTask("hotel").name("Book hotel").camundaClass(BookHotelAdapter.class)
           .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
-          .compensationStart().serviceTask("hotel-compensate").name("Hotel car").camundaClass(CancelHotelAdapter.class).compensationDone()
+          .compensationStart().serviceTask("hotel-compensate").name("Cancel hotel").camundaClass(CancelHotelAdapter.class).compensationDone()
         .serviceTask("flight").name("Book flight").camundaClass(BookFlightAdapter.class)
           .boundaryEvent().compensateEventDefinition().compensateEventDefinitionDone()
           .compensationStart().serviceTask("flight-compensate").name("Cancel flight").camundaClass(CancelFlightAdapter.class).compensationDone()
